@@ -1,8 +1,10 @@
-import { Document, model, Schema, type CallbackError } from 'mongoose';
+import { Document, model, Schema, Types, type CallbackError } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export interface IUser extends Document {
+    _id: Types.ObjectId;
     userName: string;
     name: string;
     email: string;
@@ -21,6 +23,9 @@ export interface IUser extends Document {
     lastLogin?: Date;
     createdAt: Date;
     updatedAt: Date;
+    // Add method typing here
+    validatePassword(passwordInput: string): Promise<boolean>;
+    getJWT(): string;
 }
 
 export type UserDocument = IUser & Document;
@@ -111,6 +116,21 @@ UserSchema.pre<UserDocument>('save', async function (next) {
         }
     }
 });
+
+UserSchema.methods.validatePassword = async function (passwordInputByUser: string): Promise<boolean> {
+    return await bcrypt.compare(passwordInputByUser, this.passwordHashed);
+};
+
+UserSchema.methods.getJWT = function (): string {
+    const user = this as IUser;
+    // Use your JWT_SECRET from config, not hardcoded!
+    const token = jwt.sign(
+        { userId: user._id.toString() },
+        process.env.JWT_SECRET || 'SyncSketch',
+        { expiresIn: '1h' }
+    );
+    return token;
+};
 
 
 export const User = model<UserDocument>('User', UserSchema);

@@ -1,11 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { User, type IUser } from "../Models/user.model.ts";
-
-if (!process.env.JWT_SECRET) {
-    throw new Error("JWT env is not set properly")
-}
-const JWT_SECRET = process.env.JWT_SECRET;
+import { JWT_SECRET } from "../config.ts"; 
 
 interface MyJwtPayload extends JwtPayload {
     userId: string;
