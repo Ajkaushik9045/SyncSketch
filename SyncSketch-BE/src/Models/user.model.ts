@@ -1,5 +1,6 @@
-import { Document, model, Schema } from 'mongoose';
+import { Document, model, Schema, type CallbackError } from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcrypt';
 
 export interface IUser extends Document {
     userName: string;
@@ -22,7 +23,9 @@ export interface IUser extends Document {
     updatedAt: Date;
 }
 
-const UserSchema: Schema = new Schema<IUser>({
+export type UserDocument = IUser & Document;
+
+const UserSchema: Schema<UserDocument> = new Schema<UserDocument>({
     userName: {
         type: String,
         required: [true, "UserName is Required"],
@@ -76,6 +79,7 @@ const UserSchema: Schema = new Schema<IUser>({
     },
     role: {
         type: [String],
+        enum: ['admin', 'editor', 'viewer'],
         default: ['viewer'],
     },
     permissions: {
@@ -89,14 +93,24 @@ const UserSchema: Schema = new Schema<IUser>({
         default: false,
     },
     lastLogin: { type: Date },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now,
-    },
+}, { timestamps: true });
+
+// Pre-save hook to hash password only if it has been modified or is new
+UserSchema.pre<UserDocument>('save', async function (next) {
+    if (!this.isModified('passwordHashed')) {
+        return next();
+    }
+    try {
+        this.passwordHashed = await bcrypt.hash(this.passwordHashed, 12);
+        next();
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            next(err);
+        } else {
+            next(new Error('Unknown error during password hashing'));
+        }
+    }
 });
 
-export const User = model<IUser>('User', UserSchema);
+
+export const User = model<UserDocument>('User', UserSchema);
