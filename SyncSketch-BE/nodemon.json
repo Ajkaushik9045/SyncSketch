@@ -1,0 +1,6 @@
+{
+  "watch": ["src"],
+  "ext": "ts,js,json",
+  "ignore": ["src/**/*.spec.ts"],
+  "exec": "node --import ./register.js --no-warnings ./src/index.ts"
+}
