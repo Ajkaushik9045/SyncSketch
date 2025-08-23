@@ -47,7 +47,16 @@ export const AuthMiddleware = async (
         } else {
             return res.status(401).json({ message: "Invalid token payload" });
         }
-    } catch (error: any) {
-        return res.status(401).json({ message: "Unauthorized: Invalid or expired token", error: error.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return res.status(401).json({
+                message: "Unauthorized: Invalid or expired token",
+                error: error.message,
+            });
+        }
+        return res.status(401).json({
+            message: "Unauthorized: Invalid or expired token",
+            error: String(error), // fallback
+        });
     }
 };

@@ -72,9 +72,11 @@ export const signupController = async (req: SignupRequest, res: Response) => {
                 role: user.role,
             },
         });
-    } catch (error) {
-        console.error('Signup error:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+        return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
 };
 
@@ -129,9 +131,11 @@ export const signinController = async (req: SigninRequest, res: Response) => {
             token,
             user: responseUser,
         });
-    } catch (err) {
-        console.error("Signin error:", err);
-        return res.status(500).json({ message: "Internal server error" });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+        return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
 };
 
@@ -157,8 +161,11 @@ export const profileController = async (req: AuthRequest, res: Response) => {
                 lastLoginRelative: lastLogin ? formatDistanceToNow(lastLogin, { addSuffix: true }) : null,
             }
         });
-    } catch (err) {
-        return res.status(500).json({ message: "Internal server error" });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+        return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
 };
 
@@ -182,8 +189,11 @@ export const changePasswordController = async (req: AuthRequest, res: Response) 
         user.passwordHashed = newPassword;
         await user.save();
         return res.status(200).json({ message: "Password updated successfully" });
-    } catch (err: any) {
-        return res.status(500).json({ message: "Internal server error", err: err.message });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+        return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
 };
 
@@ -193,8 +203,11 @@ export const logoutController = async (req: AuthRequest, res: Response) => {
             expires: new Date(Date.now()),
         });
         res.status(200).json({ message: "Logged out successfully" });
-    } catch (error) {
-        return res.status(500).json({ message: error instanceof Error ? error.message : 'Unknown error' });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+        return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
 };
 
@@ -255,8 +268,10 @@ export const profileEditController = async (req: AuthRequest, res: Response) => 
                 avatarUrl: user.avatarUrl,
             },
         });
-    } catch (error) {
-        console.error('Profile update error:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+        return res.status(500).json({ message: "Internal server error", error: String(error) });
     }
 };
