@@ -28,14 +28,13 @@ export interface IUser extends Document {
     getJWT(): string;
 }
 
-export type UserDocument = IUser & Document;
-
 const UserSchema: Schema<UserDocument> = new Schema<UserDocument>({
     userName: {
         type: String,
         required: [true, "UserName is Required"],
         unique: true,
         trim: true,
+        lowercase:true,
         minlength: [3, "UserName Must be at least 3 characters"],
         maxlength: [20, "UserName can not exceed 20 characters"],
         match: [/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores are allowed in username"],
@@ -132,5 +131,5 @@ UserSchema.methods.getJWT = function (): string {
     return token;
 };
 
-
+export type UserDocument = IUser & Document;
 export const User = model<UserDocument>('User', UserSchema);

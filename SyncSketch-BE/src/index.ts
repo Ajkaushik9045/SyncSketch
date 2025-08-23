@@ -3,12 +3,14 @@ import dotenv from 'dotenv';
 import authRoutes from './Routes/user.routes.ts';
 import { connectDB } from './DB/db.ts';
 import { PORT } from './config.ts';
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Async IIFE to connect to DB then start server
 (async () => {

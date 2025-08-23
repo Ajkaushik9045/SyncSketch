@@ -1,14 +1,8 @@
 import type { Request, Response } from 'express';
 import { User } from '../Models/user.model.ts';
-import { validateSignUpData } from '../Utils/validation.ts';
-import jwt from 'jsonwebtoken';
-
-
-if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET environment variable is not set");
-}
-const JWT_SECRET = process.env.JWT_SECRET;
-
+import { validateProfileData, validateSignInData, validateSignUpData } from '../Utils/validation.ts';
+import { format, formatDistanceToNow } from 'date-fns';
+import type { AuthRequest } from '../MiddleWares/authMiddleware.ts';
 
 interface SignupRequest extends Request {
     body: {
@@ -19,7 +13,7 @@ interface SignupRequest extends Request {
         phoneNumber?: string;
         avatarUrl?: string;
     };
-}
+};
 
 interface SigninRequest extends Request {
     body: {
@@ -28,7 +22,7 @@ interface SigninRequest extends Request {
         password?: string
 
     }
-}
+};
 
 export const signupController = async (req: SignupRequest, res: Response) => {
     try {
@@ -85,35 +79,73 @@ export const signupController = async (req: SignupRequest, res: Response) => {
 };
 
 export const signinController = async (req: SigninRequest, res: Response) => {
+    // Pass request body to validator
+    const { valid, errors } = validateSignInData(req.body);
+
+    if (!valid) {
+        return res.status(400).json({ errors });
+    }
+
     try {
         const { userName, email, password } = req.body;
 
-        if ((!userName && !email || !password)) {
-            return res.status(400).json({ message: "UserName or Email and password are required" });
-        }
-
+        // Your existing check can be simplified because validation covers this
         const user = await User.findOne(userName ? { userName } : { email });
 
         if (!user) {
-            return res.status(403).json({ message: "Invalid Credential" });
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+        if (password == undefined) {
+            return res.status(400).json({ message: "Password is not valid" })
         }
 
         const passwordMatch = await user.validatePassword(password);
         if (!passwordMatch) {
-            return res.status(401).json({ message: "Invalid credential" });
+            return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        // Generate JWT token (expires in 1 day)
         const token = user.getJWT();
-
+        res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000,
+        });
 
         user.lastLogin = new Date();
         await user.save();
 
-        // Respond with token and user info
+        const responseUser = {
+            id: user._id,
+            userName: user.userName,
+            email: user.email,
+            name: user.name,
+            avatarUrl: user.avatarUrl,
+            role: user.role,
+            lastLoginFormatted: user.lastLogin ? format(user.lastLogin, 'PPpp') : null,
+            lastLoginRelative: user.lastLogin ? formatDistanceToNow(user.lastLogin, { addSuffix: true }) : null,
+        };
+
         return res.status(200).json({
-            message: "Login successful",
+            message: 'User data retrieved successfully',
             token,
+            user: responseUser,
+        });
+    } catch (err) {
+        console.error("Signin error:", err);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const profileController = async (req: AuthRequest, res: Response) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" }); // Use 401 for auth errors
+        }
+
+        const lastLogin = user.lastLogin ?? null;
+
+        return res.status(200).json({
+            message: 'User profile retrieved successfully',
             user: {
                 id: user._id,
                 userName: user.userName,
@@ -121,10 +153,110 @@ export const signinController = async (req: SigninRequest, res: Response) => {
                 name: user.name,
                 avatarUrl: user.avatarUrl,
                 role: user.role,
+                lastLoginFormatted: lastLogin ? format(lastLogin, 'PPpp') : null,
+                lastLoginRelative: lastLogin ? formatDistanceToNow(lastLogin, { addSuffix: true }) : null,
             }
         });
     } catch (err) {
-        console.error("Signin error:", err);
         return res.status(500).json({ message: "Internal server error" });
     }
-}
+};
+
+export const changePasswordController = async (req: AuthRequest, res: Response) => {
+    try {
+        const user = req.user;
+        const { currentPassword, newPassword } = req.body;
+
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Current Password and new password required" })
+        }
+
+        const validatePassword = await user.validatePassword(currentPassword);
+        if (!validatePassword) {
+            return res.status(401).json({ message: "Current password is incorrect " });
+        }
+        user.passwordHashed = newPassword;
+        await user.save();
+        return res.status(200).json({ message: "Password updated successfully" });
+    } catch (err: any) {
+        return res.status(500).json({ message: "Internal server error", err: err.message });
+    }
+};
+
+export const logoutController = async (req: AuthRequest, res: Response) => {
+    try {
+        res.cookie("token", null, {
+            expires: new Date(Date.now()),
+        });
+        res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: error instanceof Error ? error.message : 'Unknown error' });
+    }
+};
+
+export const profileEditController = async (req: AuthRequest, res: Response) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        const { valid, errors } = validateProfileData(req.body);
+
+        if (!valid) {
+            return res.status(400).json({ errors });
+        }
+        // Uniqueness checks
+        if (req.body.userName) {
+            const existingUserName = await User.findOne({ userName: req.body.userName, _id: { $ne: user._id } });
+            if (existingUserName) {
+                return res.status(400).json({ message: "Username is already taken" });
+            }
+        }
+
+        if (req.body.email) {
+            const existingEmail = await User.findOne({ email: req.body.email, _id: { $ne: user._id } });
+            if (existingEmail) {
+                return res.status(400).json({ message: "Email is already taken" });
+            }
+        }
+
+
+        const updates = Object.keys(req.body);
+
+        // Allowed fields to update
+        const allowedUpdates = ['userName', 'name', 'email', 'phoneNumber', 'avatarUrl'];
+        const isValidOperation = updates.every((field) => allowedUpdates.includes(field));
+
+        if (!isValidOperation) {
+            return res.status(400).json({ message: 'Invalid fields in update' });
+        }
+
+        // Apply updates
+        for (const key of updates) {
+            // @ts-ignore because we've validated keys
+            user[key] = req.body[key];
+        }
+
+        await user.save();
+
+        return res.status(200).json({
+            message: 'Profile updated successfully',
+            user: {
+                id: user._id,
+                userName: user.userName,
+                name: user.name,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                avatarUrl: user.avatarUrl,
+            },
+        });
+    } catch (error) {
+        console.error('Profile update error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
