@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express';
 import { User } from '../Models/user.model.ts';
-import { validateProfileData, validateSignInData, validateSignUpData } from '../Utils/validation.ts';
+import { validateProfileData, validateSignInData, validateSignUpData } from '../Validators/authValidation.ts';
 import { format, formatDistanceToNow } from 'date-fns';
 import type { AuthRequest } from '../MiddleWares/authMiddleware.ts';
+import { AuthService } from '../Services/auth.Service.ts';
 
 interface SignupRequest extends Request {
     body: {
@@ -60,6 +61,7 @@ export const signupController = async (req: SignupRequest, res: Response) => {
         });
 
         await user.save();
+        await AuthService.sendSignupOtp(user.email, user._id);
 
         return res.status(201).json({
             message: 'User registered successfully',

@@ -1,4 +1,4 @@
-import { Document, model, Schema, Types, type CallbackError } from 'mongoose';
+import { Document, model, Schema, Types } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 export interface IUser extends Document {
     _id: Types.ObjectId;
     userName: string;
-    name: string;
+    name: string; 
     email: string;
     phoneNumber: string;  // Changed to string for phone validation with validator
     passwordHashed: string;
