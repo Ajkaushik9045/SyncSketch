@@ -1,41 +1,120 @@
 // src/services/otpService.ts
 import { OtpModel } from "../Models/otp.model.ts";
-import { generateOtp, getOtpExpiry } from "../Utils/otp.utils.ts";
+import { generateSecureOtp, getOtpExpiry, isOtpExpired } from "../Utils/otp.utils.ts";
 import { Types } from "mongoose";
+
+type OtpPurpose = "signup" | "resetPassword";
 
 export const OtpService = {
     async createOtp(
-        userId: Types.ObjectId,
-        purpose: "signup" | "resetPassword"
+        data: { userId?: Types.ObjectId; email?: string; userName?: string },
+        purpose: OtpPurpose
     ): Promise<string> {
         try {
-            const otpCode = generateOtp();
-            const otpExpiry = getOtpExpiry();
+            // Delete any existing OTPs for this email/username combination
+            if (purpose === "signup" && data.email && data.userName) {
+                await OtpModel.deleteMany({
+                    email: data.email,
+                    userName: data.userName,
+                    otpPurpose: purpose
+                });
+            } else if (purpose === "resetPassword" && data.userId) {
+                await OtpModel.deleteMany({
+                    user: data.userId,
+                    otpPurpose: purpose
+                });
+            }
+
+            const otpCode = generateSecureOtp();
+            const otpExpiry = getOtpExpiry(10); // 10 minutes expiry
 
             const otpDoc = await OtpModel.create({
-                user: userId,
+                user: data.userId || null,
+                email: data.email || null,
+                userName: data.userName || null,
                 otpCode,
                 otpExpiry,
                 otpPurpose: purpose,
+                isUsed: false
             });
 
             if (!otpDoc) {
                 throw new Error("Failed to create OTP in database");
             }
 
-            return otpCode; // Return OTP for sending via email
+            return otpCode;
         } catch (error) {
             console.error("Error creating OTP:", error);
             throw new Error("Could not generate OTP. Please try again later.");
         }
     },
 
-    async verifyOtp(userId: Types.ObjectId, otpCode: string, purpose: "signup" | "resetPassword") {
-        const otpDoc = await OtpModel.findOne({ user: userId, otpCode, otpPurpose: purpose });
-        if (!otpDoc) throw new Error("Invalid OTP");
-        if (otpDoc.otpExpiry < new Date()) throw new Error("OTP expired");
+    async verifyOtp(
+        identifier: { userId?: Types.ObjectId; email?: string; userName?: string },
+        otpCode: string,
+        purpose: OtpPurpose
+    ) {
+        try {
+            const query: any = { 
+                otpCode, 
+                otpPurpose: purpose,
+                isUsed: false
+            };
 
-        await OtpModel.deleteMany({ user: userId, otpPurpose: purpose }); // clear after verify
-        return true;
+            if (purpose === "resetPassword" && identifier.userId) {
+                query.user = identifier.userId;
+            } else if (purpose === "signup" && identifier.email && identifier.userName) {
+                query.email = identifier.email;
+                query.userName = identifier.userName;
+            }
+
+            const otpDoc = await OtpModel.findOne(query);
+            
+            if (!otpDoc) {
+                throw new Error("Invalid OTP");
+            }
+
+            if (isOtpExpired(otpDoc.otpExpiry)) {
+                // Delete expired OTP
+                await OtpModel.findByIdAndDelete(otpDoc._id);
+                throw new Error("OTP has expired");
+            }
+
+            // Mark OTP as used
+            await OtpModel.findByIdAndUpdate(otpDoc._id, { isUsed: true });
+
+            return otpDoc;
+        } catch (error) {
+            console.error("Error verifying OTP:", error);
+            throw error;
+        }
+    },
+
+    async deleteOtp(identifier: { userId?: Types.ObjectId; email?: string; userName?: string }, purpose: OtpPurpose) {
+        try {
+            const query: any = { otpPurpose: purpose };
+
+            if (purpose === "resetPassword" && identifier.userId) {
+                query.user = identifier.userId;
+            } else if (purpose === "signup" && identifier.email && identifier.userName) {
+                query.email = identifier.email;
+                query.userName = identifier.userName;
+            }
+
+            await OtpModel.deleteMany(query);
+        } catch (error) {
+            console.error("Error deleting OTP:", error);
+        }
+    },
+
+    async cleanupExpiredOtps() {
+        try {
+            const result = await OtpModel.deleteMany({
+                otpExpiry: { $lt: new Date() }
+            });
+            console.log(`Cleaned up ${result.deletedCount} expired OTPs`);
+        } catch (error) {
+            console.error("Error cleaning up expired OTPs:", error);
+        }
     }
 };
