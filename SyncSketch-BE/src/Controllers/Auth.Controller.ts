@@ -13,6 +13,7 @@ interface SignupRequest extends Request {
         password: string;
         phoneNumber?: string;
         avatarUrl?: string;
+        // Added  chnages 
     };
 };
 
