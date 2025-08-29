@@ -489,7 +489,7 @@ export const requestPasswordResetController = async (
 
         return res.status(200).json({
             message:
-                "If an account with this email exists, a password reset OTP has been sent",
+                "Password reset OTP has been sent",
         });
     } catch (error: unknown) {
         if (error instanceof Error) {

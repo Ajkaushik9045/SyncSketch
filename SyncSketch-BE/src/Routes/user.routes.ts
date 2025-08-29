@@ -11,7 +11,7 @@ import {
     completeSignupController,
     requestPasswordResetController,
     resetPasswordController
-} from '../Controllers/Auth.Controller.ts';
+} from '../Controllers/auth.Controller.ts';
 
 
 const authRoutes = Router();
@@ -27,11 +27,11 @@ authRoutes.post("/logout", AuthMiddleware, logoutController);
 
 // 👤 User Profile
 authRoutes.get("/profile", AuthMiddleware, profileController);
-authRoutes.patch("/edit-profile", AuthMiddleware, profileEditController);
-authRoutes.patch("/change-password", AuthMiddleware, changePasswordController);
+authRoutes.patch("/editProfile", AuthMiddleware, profileEditController);
+authRoutes.patch("/changePassword", AuthMiddleware, changePasswordController);
 
 // 🔐 Password Reset Flow
-authRoutes.post("/forgot-password", requestPasswordResetController);  // Request password reset OTP
-authRoutes.post("/reset-password", resetPasswordController);          // Verify OTP & reset password
+authRoutes.post("/forgotPassword", requestPasswordResetController);  // Request password reset OTP
+authRoutes.post("/resetPassword", resetPasswordController);          // Verify OTP & reset password
 
 export default authRoutes;

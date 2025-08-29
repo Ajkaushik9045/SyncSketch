@@ -1,5 +1,6 @@
 import nodemailer, { type Transporter, type SentMessageInfo } from "nodemailer";
 import { otpEmailTemplate } from '../Templates/mails/otp.ts'
+import { resetPasswordOtpEmailTemplate } from "../Templates/mails/resetPassword.ts";
 
 const transporter: Transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -23,6 +24,11 @@ export const MailService = {
 
     async sendOtpMail(to: string, otp: string): Promise<SentMessageInfo> {
         const html = otpEmailTemplate(otp);
+        return this.sendMail(to, "Your OTP Code", html);
+    },
+
+    async sendResetPasswordOtpMail(to: string, otp: string): Promise<SentMessageInfo> {
+        const html = resetPasswordOtpEmailTemplate(otp);
         return this.sendMail(to, "Your OTP Code", html);
     }
 }

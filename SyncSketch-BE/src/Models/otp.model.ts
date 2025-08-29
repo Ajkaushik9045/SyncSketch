@@ -2,6 +2,7 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface OtpDocument extends Document {
     _id: Types.ObjectId;
+    user: Types.ObjectId,
     email: string;
     userName: string;
     otpCode: string;
@@ -12,15 +13,20 @@ export interface OtpDocument extends Document {
 }
 
 const OtpSchema = new Schema<OtpDocument>({
+
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: function () { return this.otpPurpose === 'resetPassword'; },
+        // index: true,
+    },
     email: {
         type: String,
-        required: true,
         trim: true,
         lowercase: true,
     },
     userName: {
         type: String,
-        required: true,
         trim: true,
         lowercase: true,
     },

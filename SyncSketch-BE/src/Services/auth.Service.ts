@@ -7,10 +7,10 @@ export class AuthService {
     static async requestSignupOtp(email: string, userName: string): Promise<void> {
         try {
             // Check if user already exists
-            const existingUser = await User.findOne({ 
-                $or: [{ email }, { userName }] 
+            const existingUser = await User.findOne({
+                $or: [{ email }, { userName }]
             });
-            
+
             if (existingUser) {
                 throw new Error("User with this email or username already exists");
             }
@@ -32,8 +32,8 @@ export class AuthService {
     }
 
     static async verifySignupOtpAndCreateUser(
-        email: string, 
-        userName: string, 
+        email: string,
+        userName: string,
         otpCode: string,
         userData: {
             name: string;
@@ -45,8 +45,8 @@ export class AuthService {
         try {
             // Verify OTP
             const verifiedOtp = await OtpService.verifyOtp(
-                { email, userName }, 
-                otpCode, 
+                { email, userName },
+                otpCode,
                 "signup"
             );
 
@@ -55,10 +55,10 @@ export class AuthService {
             }
 
             // Check again if user exists (race condition protection)
-            const existingUser = await User.findOne({ 
-                $or: [{ email }, { userName }] 
+            const existingUser = await User.findOne({
+                $or: [{ email }, { userName }]
             });
-            
+
             if (existingUser) {
                 throw new Error("User with this email or username already exists");
             }
@@ -124,7 +124,7 @@ export class AuthService {
                 throw new Error("Failed to generate OTP");
             }
 
-            await MailService.sendOtpMail(email, otp);
+            await MailService.sendResetPasswordOtpMail(email, otp);
 
         } catch (error) {
             console.error("Error sending reset OTP:", error);
@@ -142,16 +142,20 @@ export class AuthService {
             if (!user) {
                 throw new Error("User not found");
             }
-
+            console.log("here the userid", user._id);
             // Verify OTP
             const verifiedOtp = await OtpService.verifyOtp(
-                { userId: user._id }, 
-                otpCode, 
+                { userId: user._id },
+                otpCode,
                 "resetPassword"
             );
 
             if (!verifiedOtp) {
                 throw new Error("Invalid or expired OTP");
+            }
+            const isSamePassword = await user.validatePassword(newPassword);
+            if (isSamePassword) {
+                throw new Error("New password must be different from the previous password");
             }
 
             // Update password

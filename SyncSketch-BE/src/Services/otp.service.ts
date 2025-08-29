@@ -11,40 +11,44 @@ export const OtpService = {
         purpose: OtpPurpose
     ): Promise<string> {
         try {
-            // Delete any existing OTPs for this email/username combination
-            if (purpose === "signup" && data.email && data.userName) {
-                await OtpModel.deleteMany({
-                    email: data.email,
-                    userName: data.userName,
-                    otpPurpose: purpose
-                });
-            } else if (purpose === "resetPassword" && data.userId) {
-                await OtpModel.deleteMany({
-                    user: data.userId,
-                    otpPurpose: purpose
-                });
-            }
-
             const otpCode = generateSecureOtp();
             const otpExpiry = getOtpExpiry(10); // 10 minutes expiry
 
-            const otpDoc = await OtpModel.create({
-                user: data.userId || null,
-                email: data.email || null,
-                userName: data.userName || null,
-                otpCode,
-                otpExpiry,
-                otpPurpose: purpose,
-                isUsed: false
-            });
+            // Build the unique query to find existing OTP for this user/email and purpose
+            const query: any = { otpPurpose: purpose, isUsed: false };
 
-            if (!otpDoc) {
-                throw new Error("Failed to create OTP in database");
+            if (purpose === "signup" && data.email && data.userName) {
+                query.email = data.email;
+                query.userName = data.userName;
+            } else if (purpose === "resetPassword" && data.userId) {
+                query.user = data.userId;
+            }
+
+            // Find existing OTP document
+            const existingOtp = await OtpModel.findOne(query);
+
+            if (existingOtp) {
+                // Update existing OTP with new code and expiry
+                existingOtp.otpCode = otpCode;
+                existingOtp.otpExpiry = otpExpiry;
+                existingOtp.isUsed = false;
+                await existingOtp.save();
+            } else {
+                // Create new OTP document
+                await OtpModel.create({
+                    user: data.userId || null,
+                    email: data.email || null,
+                    userName: data.userName || null,
+                    otpCode,
+                    otpExpiry,
+                    otpPurpose: purpose,
+                    isUsed: false,
+                });
             }
 
             return otpCode;
         } catch (error) {
-            console.error("Error creating OTP:", error);
+            console.error("Error creating/updating OTP:", error);
             throw new Error("Could not generate OTP. Please try again later.");
         }
     },
@@ -55,21 +59,28 @@ export const OtpService = {
         purpose: OtpPurpose
     ) {
         try {
-            const query: any = { 
-                otpCode, 
+            const query: any = {
+                otpCode,
                 otpPurpose: purpose,
                 isUsed: false
             };
 
-            if (purpose === "resetPassword" && identifier.userId) {
-                query.user = identifier.userId;
-            } else if (purpose === "signup" && identifier.email && identifier.userName) {
+            if (purpose === "resetPassword") {
+                if (identifier.userId) {
+                    query.user = identifier.userId;
+                } else if (identifier.email) {
+                    query.email = identifier.email;
+                }
+            }
+            else if (purpose === "signup" && identifier.email && identifier.userName) {
                 query.email = identifier.email;
                 query.userName = identifier.userName;
             }
 
             const otpDoc = await OtpModel.findOne(query);
-            
+            console.log(otpDoc);
+            console.log("OTP verification query:", query);
+
             if (!otpDoc) {
                 throw new Error("Invalid OTP");
             }
