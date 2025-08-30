@@ -2,9 +2,10 @@
 import { OtpService } from "./otp.service.ts";
 import { MailService } from "./mail.service.ts";
 import { User } from "../Models/user.model.ts";
+import { OtpModel } from "../Models/otp.model.ts";
 
 export class AuthService {
-    static async requestSignupOtp(email: string, userName: string): Promise<void> {
+    static async requestSignupOtp(email: string, userName: string): Promise<string> {
         try {
             // Check if user already exists
             const existingUser = await User.findOne({
@@ -21,9 +22,7 @@ export class AuthService {
             if (!otp) {
                 throw new Error("Failed to generate OTP");
             }
-
-            // Send OTP mail
-            await MailService.sendOtpMail(email, otp);
+            return otp;
 
         } catch (error) {
             console.error("Error requesting signup OTP:", error);
@@ -109,13 +108,13 @@ export class AuthService {
         }
     }
 
-    static async sendPasswordResetOtp(email: string): Promise<void> {
+    static async sendPasswordResetOtp(email: string): Promise<string> {
         try {
             // Find user by email
             const user = await User.findOne({ email });
             if (!user) {
                 // Don't reveal if user exists or not for security
-                return;
+                throw new Error("Failed to get user ");
             }
 
             const otp = await OtpService.createOtp({ userId: user._id }, "resetPassword");
@@ -123,8 +122,9 @@ export class AuthService {
             if (!otp) {
                 throw new Error("Failed to generate OTP");
             }
+            return otp;
 
-            await MailService.sendResetPasswordOtpMail(email, otp);
+            // await MailService.sendResetPasswordOtpMail(email, otp);
 
         } catch (error) {
             console.error("Error sending reset OTP:", error);
@@ -161,7 +161,8 @@ export class AuthService {
             // Update password
             user.passwordHashed = newPassword;
             await user.save();
-
+            // Now mark OTP as used explicitly AFTER successful password update
+            await OtpModel.findByIdAndUpdate(verifiedOtp._id, { isUsed: true })
             // Clean up OTP
             await OtpService.deleteOtp({ userId: user._id }, "resetPassword");
 

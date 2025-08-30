@@ -92,7 +92,7 @@ export const OtpService = {
             }
 
             // Mark OTP as used
-            await OtpModel.findByIdAndUpdate(otpDoc._id, { isUsed: true });
+            // await OtpModel.findByIdAndUpdate(otpDoc._id, { isUsed: true });
 
             return otpDoc;
         } catch (error) {

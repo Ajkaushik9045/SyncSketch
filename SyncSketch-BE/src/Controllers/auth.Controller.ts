@@ -10,6 +10,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import type { AuthRequest } from "../MiddleWares/authMiddleware.ts";
 import { AuthService } from "../Services/auth.Service.ts";
+import { MailService } from "../Services/mail.service.ts";
 
 interface SignupStep1Request extends Request {
     body: {
@@ -53,15 +54,16 @@ export const requestSignupOtpController = async (
         const { userName, email } = req.body;
 
         // Request OTP
-        await AuthService.requestSignupOtp(email, userName);
-
-        return res.status(200).json({
+        const otp = await AuthService.requestSignupOtp(email, userName);
+        res.status(200).json({
             message: "OTP sent successfully to your email",
             data: {
                 email,
                 userName,
             },
         });
+        // Send OTP mail
+        await MailService.sendOtpMail(email, otp);
     } catch (error: unknown) {
         if (error instanceof Error) {
             if (error.message.includes("already exists")) {
@@ -485,12 +487,12 @@ export const requestPasswordResetController = async (
         }
 
         // Send password reset OTP
-        await AuthService.sendPasswordResetOtp(email);
-
-        return res.status(200).json({
+        const otp = await AuthService.sendPasswordResetOtp(email);
+        res.status(200).json({
             message:
                 "Password reset OTP has been sent",
         });
+        await MailService.sendResetPasswordOtpMail(email, otp);
     } catch (error: unknown) {
         if (error instanceof Error) {
             return res
