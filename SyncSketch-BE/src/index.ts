@@ -1,9 +1,10 @@
-import express, { type Request, type Response } from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
-import authRoutes from './Routes/user.routes.ts';
 import { connectDB } from './DB/db.ts';
 import { PORT } from './config.ts';
 import cookieParser from "cookie-parser";
+import authRoutes from './Routes/user.routes.ts';
+import ConnectionRoutes from './Routes/connection.routes.ts';
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ app.use(cookieParser());
         console.log('Database connected');
 
         app.use('/api/v1/auth', authRoutes);
-        
+        app.use('/api/v1/connection', ConnectionRoutes);
 
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);

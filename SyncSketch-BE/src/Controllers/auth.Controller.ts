@@ -11,33 +11,8 @@ import { format, formatDistanceToNow } from "date-fns";
 import type { AuthRequest } from "../MiddleWares/authMiddleware.ts";
 import { AuthService } from "../Services/auth.Service.ts";
 import { MailService } from "../Services/mail.service.ts";
+import type { SigninRequest, SignupStep1Request, SignupStep2Request } from "../Interface/auth.interface.ts";
 
-interface SignupStep1Request extends Request {
-    body: {
-        userName: string;
-        email: string;
-    };
-}
-
-interface SignupStep2Request extends Request {
-    body: {
-        userName: string;
-        email: string;
-        otpCode: string;
-        name: string;
-        password: string;
-        phoneNumber?: string | undefined;
-        avatarUrl?: string | undefined;
-    };
-}
-
-interface SigninRequest extends Request {
-    body: {
-        userName?: string;
-        email?: string;
-        password?: string;
-    };
-}
 
 // Step 1: Request OTP for signup
 export const requestSignupOtpController = async (
@@ -147,79 +122,6 @@ export const completeSignupController = async (
             if (error.message.includes("already exists")) {
                 return res.status(409).json({ message: error.message });
             }
-            return res
-                .status(500)
-                .json({ message: "Internal server error", error: error.message });
-        }
-        return res
-            .status(500)
-            .json({ message: "Internal server error", error: String(error) });
-    }
-};
-
-// Legacy signup controller (for backward compatibility)
-export const signupController = async (
-    req: SignupStep2Request,
-    res: Response
-) => {
-    try {
-        // This is now a wrapper around the two-step flow
-        // For immediate signup without OTP verification
-        const { userName, email, name, password, phoneNumber, avatarUrl } =
-            req.body;
-
-        // Check for existing user/email
-        const existingUser = await User.findOne({ $or: [{ userName }, { email }] });
-        if (existingUser) {
-            return res
-                .status(409)
-                .json({ message: "Username or email already exists." });
-        }
-
-        // Create new user; password hashing will happen in model hook
-        const user = new User({
-            userName,
-            name,
-            email,
-            passwordHashed: password, // plain password, hashed in model
-            phoneNumber: phoneNumber || "",
-            avatarUrl: avatarUrl || "",
-            isVerified: false, // Legacy users are not verified
-            role: ["viewer"],
-            permissions: {
-                canDraw: true,
-                canType: true,
-                canAudio: true,
-                canInvite: true,
-            },
-            isBlocked: false,
-        });
-
-        await user.save();
-
-        const token = user.getJWT();
-
-        // Set JWT cookie
-        res.cookie("token", token, {
-            httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        return res.status(201).json({
-            message: "User registered successfully",
-            user: {
-                id: user._id,
-                userName: user.userName,
-                email: user.email,
-                name: user.name,
-                avatarUrl: user.avatarUrl,
-                role: user.role,
-                isVerified: user.isVerified,
-            },
-            token,
-        });
-    } catch (error: unknown) {
-        if (error instanceof Error) {
             return res
                 .status(500)
                 .json({ message: "Internal server error", error: error.message });

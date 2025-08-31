@@ -1,6 +1,6 @@
 import { model, Schema, type Types, type Document } from "mongoose";
 
-export interface IFriendRequest extends Document {
+export interface IConnection extends Document {
     from: Types.ObjectId;
     to: Types.ObjectId;
     status: 'pending' | 'accepted' | 'rejected';
@@ -8,7 +8,7 @@ export interface IFriendRequest extends Document {
     updatedAt: Date;
 }
 
-const FriendRequestSchema = new Schema<IFriendRequest>({
+const ConnectionSchema = new Schema<IConnection>({
     from: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -26,4 +26,4 @@ const FriendRequestSchema = new Schema<IFriendRequest>({
     }
 }, { timestamps: true });
 
-export const FriendRequest = model<IFriendRequest>('FriendRequest', FriendRequestSchema);
+export const FriendRequest = model<IConnection>('Connection', ConnectionSchema);

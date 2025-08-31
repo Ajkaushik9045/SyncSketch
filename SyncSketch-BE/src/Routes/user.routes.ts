@@ -6,7 +6,6 @@ import {
     profileController, 
     profileEditController, 
     signinController, 
-    signupController,
     requestSignupOtpController,
     completeSignupController,
     requestPasswordResetController,
@@ -19,7 +18,6 @@ const authRoutes = Router();
 // 🔑 Auth - Two-Step Signup Flow
 authRoutes.post("/signup/request-otp", requestSignupOtpController);  // Step 1: Request OTP
 authRoutes.post("/signup/complete", completeSignupController);        // Step 2: Verify OTP & Complete Signup
-authRoutes.post("/signup", signupController);                         // Legacy: Direct signup (no OTP)
 
 // 🔑 Auth - Signin & Logout
 authRoutes.post("/signin", signinController);
