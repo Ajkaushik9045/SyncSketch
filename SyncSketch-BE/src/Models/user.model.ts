@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 export interface IUser extends Document {
     _id: Types.ObjectId;
     userName: string;
-    name: string; 
+    name: string;
     email: string;
     phoneNumber: string;  // Changed to string for phone validation with validator
     passwordHashed: string;
@@ -19,6 +19,7 @@ export interface IUser extends Document {
         canAudio: boolean;
         canInvite: boolean;
     };
+    blockedUsers: Types.ObjectId[];
     isBlocked: boolean;
     lastLogin?: Date;
     createdAt: Date;
@@ -34,7 +35,7 @@ const UserSchema: Schema<UserDocument> = new Schema<UserDocument>({
         required: [true, "UserName is Required"],
         unique: true,
         trim: true,
-        lowercase:true,
+        lowercase: true,
         minlength: [3, "UserName Must be at least 3 characters"],
         maxlength: [20, "UserName can not exceed 20 characters"],
         match: [/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores are allowed in username"],
@@ -92,6 +93,11 @@ const UserSchema: Schema<UserDocument> = new Schema<UserDocument>({
         canAudio: { type: Boolean, default: true },
         canInvite: { type: Boolean, default: true },
     },
+    blockedUsers: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        default: [],
+    }],
     isBlocked: {
         type: Boolean,
         default: false,

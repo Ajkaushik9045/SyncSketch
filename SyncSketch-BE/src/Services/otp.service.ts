@@ -1,11 +1,14 @@
 // src/services/otpService.ts
 import { OtpModel } from "../Models/otp.model.ts";
+import { welcomeEmailTemplate } from "../Templates/mails/welcome.ts";
 import { generateSecureOtp, getOtpExpiry, isOtpExpired } from "../Utils/otp.utils.ts";
 import { Types } from "mongoose";
 
 type OtpPurpose = "signup" | "resetPassword";
 
 export const OtpService = {
+
+
     async createOtp(
         data: { userId?: Types.ObjectId; email?: string; userName?: string },
         purpose: OtpPurpose

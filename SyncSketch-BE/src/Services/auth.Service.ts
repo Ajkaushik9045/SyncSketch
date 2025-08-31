@@ -1,6 +1,5 @@
 // src/services/authService.ts
 import { OtpService } from "./otp.service.ts";
-import { MailService } from "./mail.service.ts";
 import { User } from "../Models/user.model.ts";
 import { OtpModel } from "../Models/otp.model.ts";
 

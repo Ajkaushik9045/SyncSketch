@@ -19,6 +19,7 @@ app.use(cookieParser());
         console.log('Database connected');
 
         app.use('/api/v1/auth', authRoutes);
+        
 
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);

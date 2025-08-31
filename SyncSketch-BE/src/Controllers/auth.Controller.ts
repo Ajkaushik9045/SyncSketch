@@ -130,11 +130,12 @@ export const completeSignupController = async (
             maxAge: 24 * 60 * 60 * 1000, // 24 hours
         });
 
-        return res.status(201).json({
+        res.status(201).json({
             message: "User registered successfully",
             user: result.user,
             token: result.token,
         });
+        await MailService.sendWelcomeMail(email);
     } catch (error: unknown) {
         if (error instanceof Error) {
             if (
