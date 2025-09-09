@@ -1,6 +1,6 @@
-import app from './server.ts';
-import { connectDB } from './Config/database.ts';
-import { config } from './Config/env.ts'; // ✅ import validated config
+import app from './server';
+import { connectDB } from './Config/database';
+import { config } from './Config/env'; // ✅ import validated config
 
 // Graceful shutdown handler
 const gracefulShutdown = (signal: string) => {
@@ -38,8 +38,7 @@ const startServer = async () => {
       console.log(`🌍 Environment: ${config.server.env}`);
       console.log(`📊 Health check: http://localhost:${config.server.port}/health`);
     });
-    const endTime = Date.now();
-    console.log(endTime - startTime, "TIME TAKEN IN MS");
+
 
 
     // Handle server errors

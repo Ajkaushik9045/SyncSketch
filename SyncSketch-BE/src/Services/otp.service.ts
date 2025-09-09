@@ -1,7 +1,7 @@
-// src/services/otpService.ts
-import { OtpModel } from "../Models/otp.model.ts";
-import { welcomeEmailTemplate } from "../Templates/mails/welcome.ts";
-import { generateSecureOtp, getOtpExpiry, isOtpExpired } from "../Utils/otp.utils.ts";
+// src/services/otpService
+import { OtpModel } from "../Models/otp.model";
+import { welcomeEmailTemplate } from "../Templates/mails/welcome";
+import { generateSecureOtp, getOtpExpiry, isOtpExpired } from "../Utils/otp.utils";
 import { Types } from "mongoose";
 
 type OtpPurpose = "signup" | "resetPassword";

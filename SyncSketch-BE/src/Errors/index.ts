@@ -1,1 +1,1 @@
-export { AppError } from './AppError.ts';
+export { AppError } from './AppError';

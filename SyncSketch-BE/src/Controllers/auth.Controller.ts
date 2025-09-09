@@ -1,20 +1,20 @@
 import type { Request, Response } from "express";
-import { User } from "../Models/user.model.ts";
+import { User } from "../Models/user.model";
 import {
     validateProfileData,
     validateSignInData,
     validateSignUpStep1Data,
     validateSignUpStep2Data,
     validateOtpVerificationData,
-} from "../Validators/authValidation.ts";
+} from "../Validators/authValidation";
 import { format, formatDistanceToNow } from "date-fns";
-import type { AuthRequest } from "../MiddleWares/authMiddleware.ts";
-import { AuthService } from "../Services/auth.Service.ts";
-import { MailService } from "../Services/mail.service.ts";
-import type { SigninRequest, SignupStep1Request, SignupStep2Request } from "../Interface/auth.interface.ts";
-import { catchAsync } from "../Utils/catchAsync.util.ts";
-import { HTTP_STATUS, MESSAGES } from "../Constant/index.ts";
-import { AppError } from "../Errors/index.ts";
+import type { AuthRequest } from "../MiddleWares/authMiddleware";
+import { AuthService } from "../Services/auth.Service";
+import { MailService } from "../Services/mail.service";
+import type { SigninRequest, SignupStep1Request, SignupStep2Request } from "../Interface/auth.interface";
+import { catchAsync } from "../Utils/catchAsync.util";
+import { HTTP_STATUS, MESSAGES } from "../Constant/index";
+import { AppError } from "../Errors/index";
 
 
 // Step 1: Request OTP for signup

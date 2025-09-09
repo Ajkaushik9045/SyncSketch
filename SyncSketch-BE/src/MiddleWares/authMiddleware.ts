@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import { User, type UserDocument } from "../Models/user.model.ts";
-import { config } from "../Config/env.ts";
-import { catchAsync } from "../Utils/catchAsync.util.ts"; // path to catchAsync
+import { User, type UserDocument } from "../Models/user.model";
+import { config } from "../Config/env";
+import { catchAsync } from "../Utils/catchAsync.util"; // path to catchAsync
 
 interface MyJwtPayload extends JwtPayload {
     userId: string;

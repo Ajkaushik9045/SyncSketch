@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { config } from './env.ts'; // ✅ import validated config
+import { config } from './env'; // ✅ import validated config
 
 export const connectDB = async (): Promise<void> => {
     const start = Date.now(); // Record start time

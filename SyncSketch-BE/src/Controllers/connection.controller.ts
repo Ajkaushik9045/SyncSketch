@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
-import type { SendConnectionRequestBody, } from "../Interface/connection.interface.ts";
-import type { AuthRequest } from "../MiddleWares/authMiddleware.ts";
-import { catchAsync } from "../Utils/catchAsync.util.ts";
-import { HTTP_STATUS, MESSAGES } from "../Constant/index.ts";
-import { AppError } from "../Errors/index.ts";
+import type { SendConnectionRequestBody, } from "../Interface/connection.interface";
+import type { AuthRequest } from "../MiddleWares/authMiddleware";
+import { catchAsync } from "../Utils/catchAsync.util";
+import { HTTP_STATUS, MESSAGES } from "../Constant/index";
+import { AppError } from "../Errors/index";
 
 type SendConnectionRequest = AuthRequest & Request<{}, {}, SendConnectionRequestBody>;
 

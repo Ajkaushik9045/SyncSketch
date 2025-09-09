@@ -2,12 +2,11 @@
   "name": "syncsketch-be",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-  "start": "node dist/index.js",
-  "dev": "nodemon --watch src --ext ts --exec",
-  "build": "tsc"
-},
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -20,7 +19,9 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.2",
+    "ms": "^2.1.3",
     "nodemailer": "^7.0.5",
+    "ts-node-dev": "^2.0.0",
     "validator": "^13.15.15",
     "zod": "^4.1.5"
   },

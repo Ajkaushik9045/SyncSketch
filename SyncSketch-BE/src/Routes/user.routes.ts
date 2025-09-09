@@ -1,16 +1,16 @@
 import { Router } from 'express'
-import { AuthMiddleware } from '../MiddleWares/authMiddleware.ts';
-import { 
-    changePasswordController, 
-    logoutController, 
-    profileController, 
-    profileEditController, 
-    signinController, 
+import { AuthMiddleware } from '../MiddleWares/authMiddleware';
+import {
+    changePasswordController,
+    logoutController,
+    profileController,
+    profileEditController,
+    signinController,
     requestSignupOtpController,
     completeSignupController,
     requestPasswordResetController,
     resetPasswordController
-} from '../Controllers/auth.Controller.ts';
+} from '../Controllers/auth.Controller';
 
 
 const authRoutes = Router();

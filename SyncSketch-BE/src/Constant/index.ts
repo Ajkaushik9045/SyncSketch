@@ -1,2 +1,2 @@
-export { HTTP_STATUS } from './httpStatus.ts';
-export { MESSAGES } from './messages.ts';
+export { HTTP_STATUS } from './httpStatus';
+export { MESSAGES } from './messages';

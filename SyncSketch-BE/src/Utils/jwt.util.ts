@@ -1,5 +1,7 @@
 import jwt, { type SignOptions } from 'jsonwebtoken';
-import { config } from '../Config/env.ts';
+import { config } from '../Config/env';
+import ms, { type StringValue } from "ms";
+
 
 export interface JwtPayload {
   userId: string;
@@ -10,7 +12,7 @@ export interface JwtPayload {
 
 export const generateToken = (payload: Omit<JwtPayload, 'iat' | 'exp'>): string => {
   const options: SignOptions = {
-    expiresIn: config.jwt.expiresIn,
+    expiresIn: ms(config.jwt.expiresIn as StringValue) / 1000,
   };
   return jwt.sign(payload, config.jwt.secret, options);
 };

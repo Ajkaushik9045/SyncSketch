@@ -1,11 +1,11 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import authRoutes from './Routes/user.routes.ts';
-import ConnectionRoutes from './Routes/connection.routes.ts';
-import { AppError } from './Errors/index.ts';
-import { HTTP_STATUS } from './Constant/index.ts';
+import authRoutes from './Routes/user.routes';
+import ConnectionRoutes from './Routes/connection.routes';
+import { AppError } from './Errors/index';
+import { HTTP_STATUS } from './Constant/index';
 import type { Request, Response, NextFunction } from 'express';
-import { config } from './Config/env.ts'; // ✅ import validated config
+import { config } from './Config/env';
 
 const app = express();
 

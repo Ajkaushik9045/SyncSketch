@@ -1,7 +1,6 @@
-// src/config/env.ts
+// src/config/env
 import dotenv from "dotenv";
 import { z } from "zod";
-const startTime = Date.now();
 // ✅ Cache parsed config to prevent re-parsing on multiple imports
 let cachedConfig: ReturnType<typeof parseEnv> | null = null;
 
@@ -32,7 +31,7 @@ function parseEnv() {
         if (isNaN(port)) throw new Error("SMTP_PORT must be a number");
         return port;
       }),
-    SMTP_USER: z.string().email("SMTP_USER must be a valid email"),
+    SMTP_USER: z.email("SMTP_USER must be a valid email"),
     SMTP_PASS: z.string(),
     SMTP_SECURE: z
       .string()
@@ -47,7 +46,7 @@ function parseEnv() {
 
 // Export cached config
 const env = cachedConfig ?? (cachedConfig = parseEnv());
-console.log(`✅ Env loaded in ${Date.now() - startTime}ms`);
+
 
 
 export const config = {

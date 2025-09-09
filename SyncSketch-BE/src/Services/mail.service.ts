@@ -1,9 +1,9 @@
 import { type SentMessageInfo } from "nodemailer";
-import { mailTransporter } from "../Config/mail.ts";
-import { otpEmailTemplate } from "../Templates/mails/otp.ts";
-import { resetPasswordOtpEmailTemplate } from "../Templates/mails/resetPassword.ts";
-import { welcomeEmailTemplate } from "../Templates/mails/welcome.ts";
-import { config } from "../Config/env.ts";
+import { mailTransporter } from "../Config/mail";
+import { otpEmailTemplate } from "../Templates/mails/otp";
+import { resetPasswordOtpEmailTemplate } from "../Templates/mails/resetPassword";
+import { welcomeEmailTemplate } from "../Templates/mails/welcome";
+import { config } from "../Config/env";
 
 export const MailService = {
     async sendMail(to: string, subject: string, html: string): Promise<SentMessageInfo> {

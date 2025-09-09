@@ -1,7 +1,7 @@
-// src/services/authService.ts
-import { OtpService } from "./otp.service.ts";
-import { User } from "../Models/user.model.ts";
-import { OtpModel } from "../Models/otp.model.ts";
+// src/services/authService
+import { OtpService } from "./otp.service";
+import { User } from "../Models/user.model";
+import { OtpModel } from "../Models/otp.model";
 
 export class AuthService {
     static async requestSignupOtp(email: string, userName: string): Promise<string> {

@@ -2,7 +2,7 @@ import { Document, model, Schema, Types } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { config } from '../Config/env.ts';
+import { config } from '../Config/env';
 
 export interface IUser extends Document {
     _id: Types.ObjectId;
