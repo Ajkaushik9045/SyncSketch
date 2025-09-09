@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { sendConnectionRequestController } from "../Controllers/connection.controller.ts";
 import { AuthMiddleware } from "../MiddleWares/authMiddleware.ts";
-const ConnectionRoutes= Router();
+const ConnectionRoutes = Router();
 
-ConnectionRoutes.post("/connection/request",AuthMiddleware ,sendConnectionRequestController);
+// connection.routes.ts
+ConnectionRoutes.post("/request", AuthMiddleware, sendConnectionRequestController);
 
 export default ConnectionRoutes;

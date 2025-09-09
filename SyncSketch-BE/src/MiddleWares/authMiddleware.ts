@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
-import jwt, { type JwtPayload } from 'jsonwebtoken';
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import { User, type UserDocument } from "../Models/user.model.ts";
-import { JWT_SECRET } from "../config.ts";
+import { config } from "../Config/env.ts";
+import { catchAsync } from "../Utils/catchAsync.util.ts"; // path to catchAsync
 
 interface MyJwtPayload extends JwtPayload {
     userId: string;
@@ -11,24 +12,17 @@ export interface AuthRequest extends Request {
     user?: UserDocument;
 }
 
-
-export const AuthMiddleware = async (
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-) => {
-    try {
+export const AuthMiddleware = catchAsync(
+    async (req: AuthRequest, res: Response, next: NextFunction) => {
         const authHeader = req.headers.authorization || req.cookies.token;
         if (!authHeader) {
-            return res.status(401).json({ message: "No authentication Token provided" });
+            return res.status(401).json({ message: "No authentication token provided" });
         }
+
         const token = authHeader;
 
-        if (!token) {
-            return null;
-        }
-        const decoded = jwt.verify(token, JWT_SECRET);
-        // Type check and safe cast!
+        const decoded = jwt.verify(token, config.jwt.secret);
+
         if (
             typeof decoded === "object" &&
             decoded !== null &&
@@ -47,16 +41,5 @@ export const AuthMiddleware = async (
         } else {
             return res.status(401).json({ message: "Invalid token payload" });
         }
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-            return res.status(401).json({
-                message: "Unauthorized: Invalid or expired token",
-                error: error.message,
-            });
-        }
-        return res.status(401).json({
-            message: "Unauthorized: Invalid or expired token",
-            error: String(error), // fallback
-        });
     }
-};
+);

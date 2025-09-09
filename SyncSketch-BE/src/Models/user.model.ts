@@ -2,6 +2,7 @@ import { Document, model, Schema, Types } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { config } from '../Config/env.ts';
 
 export interface IUser extends Document {
     _id: Types.ObjectId;
@@ -131,7 +132,7 @@ UserSchema.methods.getJWT = function (): string {
     // Use your JWT_SECRET from config, not hardcoded!
     const token = jwt.sign(
         { userId: user._id.toString() },
-        process.env.JWT_SECRET || 'SyncSketch',
+        config.jwt.secret || 'SyncSketch',
         { expiresIn: '1h' }
     );
     return token;

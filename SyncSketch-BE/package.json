@@ -4,10 +4,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon",
-    "build": "tsc"
-  },
+  "start": "node dist/index.js",
+  "dev": "nodemon --watch src --ext ts --exec",
+  "build": "tsc"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -21,7 +21,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.2",
     "nodemailer": "^7.0.5",
-    "validator": "^13.15.15"
+    "validator": "^13.15.15",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -34,6 +35,7 @@
     "@types/validator": "^13.15.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
 }
