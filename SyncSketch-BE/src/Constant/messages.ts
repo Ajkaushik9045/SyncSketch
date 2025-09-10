@@ -17,4 +17,17 @@ export const MESSAGES = {
     VALIDATION_ERROR: 'Validation error',
     NOT_FOUND: 'Resource not found',
   },
+  CONNECTION: {
+    REQUEST_SENT: 'Connection request sent successfully',
+    REQUEST_ALREADY_SENT: 'Connection request already sent',
+    REQUEST_NOT_FOUND: 'Connection request not found',
+    CANNOT_CONNECT_SELF: 'You cannot send a connection request to yourself',
+    USER_NOT_FOUND: 'Target user not found',
+    REQUEST_ACCEPTED: 'Connection request accepted',
+    REQUEST_REJECTED: 'Connection request rejected',
+    ALREADY_CONNECTED: 'You are already connected with this user',
+    PENDING_REQUESTS_FETCHED: 'Pending connection requests fetched successfully',
+    SENT_REQUESTS_FETCHED: 'Sent connection requests fetched successfully',
+    CONNECTIONS_FETCHED: 'Connections fetched successfully',
+  },
 } as const;

@@ -287,7 +287,6 @@ export const profileEditController = catchAsync(async (
     });
 });
 
-// Password reset flow
 export const requestPasswordResetController = catchAsync(async (
     req: Request,
     res: Response
