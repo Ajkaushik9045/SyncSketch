@@ -26,4 +26,4 @@ const ConnectionSchema = new Schema<IConnection>({
     }
 }, { timestamps: true });
 
-export const FriendRequest = model<IConnection>('Connection', ConnectionSchema);
+export const Connection = model<IConnection>('Connections', ConnectionSchema);
