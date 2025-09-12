@@ -25,9 +25,12 @@ export const MESSAGES = {
     USER_NOT_FOUND: 'Target user not found',
     REQUEST_ACCEPTED: 'Connection request accepted',
     REQUEST_REJECTED: 'Connection request rejected',
+    REQUEST_CANCELLED: 'Connection request cancelled successfully',
+    CONNECTION_REMOVED: 'Connection removed successfully',
     ALREADY_CONNECTED: 'You are already connected with this user',
     PENDING_REQUESTS_FETCHED: 'Pending connection requests fetched successfully',
     SENT_REQUESTS_FETCHED: 'Sent connection requests fetched successfully',
     CONNECTIONS_FETCHED: 'Connections fetched successfully',
+    STATUS_FETCHED: 'Connection status fetched successfully',
   },
 } as const;

@@ -1,18 +1,36 @@
 import { Router } from "express";
-import { sendConnectionRequestController } from "../Controllers/connection.controller";
+import { 
+    sendConnectionRequestController,
+    acceptConnectionRequestController,
+    rejectConnectionRequestController,
+    cancelConnectionRequestController,
+    removeConnectionController,
+    getConnectionsController,
+    getPendingRequestsController,
+    getSentRequestsController,
+    getConnectionStatusController
+} from "../Controllers/connection.controller";
 import { AuthMiddleware } from "../MiddleWares/authMiddleware";
+import {
+    validateSendConnectionRequest,
+    validateConnectionRequestId,
+    validateConnectionId,
+    validateUserId
+} from "../MiddleWares/validation.middleware";
+
 const ConnectionRoutes = Router();
 
-// connection.routes
-ConnectionRoutes.post("/sendRequest", AuthMiddleware, sendConnectionRequestController);
-// ConnectionRoutes.post("/accept/:requestId", AuthMiddleware, acceptConnectionRequestController);
-// ConnectionRoutes.post("/reject/:requestId", AuthMiddleware, rejectConnectionRequestController);
-// ConnectionRoutes.delete("/cancel/:requestId", AuthMiddleware, cancelConnectionRequestController);
-// ConnectionRoutes.delete("/remove/:connectionId", AuthMiddleware, removeConnectionController);
+// Connection management routes
+ConnectionRoutes.post("/sendRequest", AuthMiddleware, validateSendConnectionRequest, sendConnectionRequestController);
+ConnectionRoutes.post("/accept/:requestId", AuthMiddleware, validateConnectionRequestId, acceptConnectionRequestController);
+ConnectionRoutes.post("/reject/:requestId", AuthMiddleware, validateConnectionRequestId, rejectConnectionRequestController);
+ConnectionRoutes.delete("/cancel/:requestId", AuthMiddleware, validateConnectionRequestId, cancelConnectionRequestController);
+ConnectionRoutes.delete("/remove/:connectionId", AuthMiddleware, validateConnectionId, removeConnectionController);
 
-// ConnectionRoutes.get("/", AuthMiddleware, getConnectionsController);
-// ConnectionRoutes.get("/requests", AuthMiddleware, getPendingRequestsController);
-// ConnectionRoutes.get("/sent", AuthMiddleware, getSentRequestsController);
-// ConnectionRoutes.get("/status/:userId", AuthMiddleware, getConnectionStatusController);
+// Connection retrieval routes
+ConnectionRoutes.get("/", AuthMiddleware, getConnectionsController);
+ConnectionRoutes.get("/requests", AuthMiddleware, getPendingRequestsController);
+ConnectionRoutes.get("/sent", AuthMiddleware, getSentRequestsController);
+ConnectionRoutes.get("/status/:userId", AuthMiddleware, validateUserId, getConnectionStatusController);
 
 export default ConnectionRoutes;
