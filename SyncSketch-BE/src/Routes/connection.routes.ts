@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { 
+import {
     sendConnectionRequestController,
     acceptConnectionRequestController,
     rejectConnectionRequestController,
@@ -8,7 +8,7 @@ import {
     getConnectionsController,
     getPendingRequestsController,
     getSentRequestsController,
-    getConnectionStatusController
+    // getConnectionStatusController
 } from "../Controllers/connection.controller";
 import { AuthMiddleware } from "../MiddleWares/authMiddleware";
 import {
@@ -31,6 +31,6 @@ ConnectionRoutes.delete("/remove/:connectionId", AuthMiddleware, validateConnect
 ConnectionRoutes.get("/", AuthMiddleware, getConnectionsController);
 ConnectionRoutes.get("/requests", AuthMiddleware, getPendingRequestsController);
 ConnectionRoutes.get("/sent", AuthMiddleware, getSentRequestsController);
-ConnectionRoutes.get("/status/:userId", AuthMiddleware, validateUserId, getConnectionStatusController);
+// ConnectionRoutes.get("/status/:userId", AuthMiddleware, validateUserId, getConnectionStatusController);
 
 export default ConnectionRoutes;

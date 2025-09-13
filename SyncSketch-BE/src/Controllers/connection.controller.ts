@@ -9,6 +9,12 @@ import type {
 } from "../Interface/connection.interface";
 import type { AuthRequest } from "../MiddleWares/authMiddleware";
 import { catchAsync } from "../Utils/catchAsync.util";
+import { 
+    validateConnectionRequest,
+    validateConnectionAction,
+    validateConnectionCancellation,
+    validateConnectionRemoval
+} from "../Utils/connection.util";
 import { HTTP_STATUS, MESSAGES } from "../Constant/index";
 import { AppError } from "../Errors/index";
 import { User } from "../Models/user.model";
@@ -19,30 +25,52 @@ type AcceptConnectionRequest = AuthRequest & Request<AcceptConnectionRequestPara
 type RejectConnectionRequest = AuthRequest & Request<RejectConnectionRequestParams, {}, {}>;
 type CancelConnectionRequest = AuthRequest & Request<CancelConnectionRequestParams, {}, {}>;
 type RemoveConnectionRequest = AuthRequest & Request<RemoveConnectionParams, {}, {}>;
-type GetConnectionStatusRequest = AuthRequest & Request<GetConnectionStatusParams, {}, {}>;
+// type GetConnectionStatusRequest = AuthRequest & Request<GetConnectionStatusParams, {}, {}>;
 
 export const sendConnectionRequestController = catchAsync(async (req: SendConnectionRequest, res: Response) => {
     const { toUserId } = req.body;
     const user = req.user;
+    
     if (!user) {
         throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
-    };
-    if (user.id === toUserId) {
-        throw new AppError(MESSAGES.CONNECTION.CANNOT_CONNECT_SELF, HTTP_STATUS.BAD_REQUEST);
-    };
+    }
+    
+    // Check if target user exists
     const receiver = await User.findById(toUserId);
     if (!receiver) {
         throw new AppError(MESSAGES.CONNECTION.USER_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
     }
-    const existingRequest = await Connection.findOne({
-        from: user.id,
-        to: toUserId,
-        status: "pending",
-    });
-    if (existingRequest) {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_ALREADY_SENT, HTTP_STATUS.BAD_REQUEST);
+    
+    // Validate connection request using utility
+    try {
+        await validateConnectionRequest(user.id, toUserId);
+    } catch (error) {
+        // Check if it's a rejected connection that can be reused
+        const existingConnection = await Connection.findOne({
+            $or: [
+                { from: user.id, to: toUserId },
+                { from: toUserId, to: user.id }
+            ],
+            status: 'rejected'
+        });
+        
+        if (existingConnection) {
+            // Update the existing rejected connection to pending
+            existingConnection.from = user.id;
+            existingConnection.to = toUserId;
+            existingConnection.status = 'pending';
+            await existingConnection.save();
+            
+            return res.status(HTTP_STATUS.CREATED).json({
+                message: MESSAGES.CONNECTION.REQUEST_SENT,
+                request: existingConnection,
+            });
+        }
+        
+        throw error;
     }
 
+    // Create new connection request
     const connection = await Connection.create({
         from: user.id,
         to: toUserId,
@@ -61,26 +89,14 @@ export const acceptConnectionRequestController = catchAsync(async (req: AcceptCo
     if (!requestId) {
         throw new AppError(MESSAGES.GENERAL.VALIDATION_ERROR, HTTP_STATUS.BAD_REQUEST);
     }
-    const user = req.user;
     
+    const user = req.user;
     if (!user) {
         throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
     
-    const connectionRequest = await Connection.findById(requestId);
-    if (!connectionRequest) {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
-    }
-    
-    // Check if the user is the recipient of the request
-    if (connectionRequest.to.toString() !== user.id) {
-        throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
-    }
-    
-    // Check if request is still pending
-    if (connectionRequest.status !== 'pending') {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_NOT_FOUND, HTTP_STATUS.BAD_REQUEST);
-    }
+    // Validate connection action using utility
+    const connectionRequest = await validateConnectionAction(user.id, requestId, 'accept');
     
     // Update the connection status to accepted
     connectionRequest.status = 'accepted';
@@ -101,26 +117,14 @@ export const rejectConnectionRequestController = catchAsync(async (req: RejectCo
     if (!requestId) {
         throw new AppError(MESSAGES.GENERAL.VALIDATION_ERROR, HTTP_STATUS.BAD_REQUEST);
     }
-    const user = req.user;
     
+    const user = req.user;
     if (!user) {
         throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
     
-    const connectionRequest = await Connection.findById(requestId);
-    if (!connectionRequest) {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
-    }
-    
-    // Check if the user is the recipient of the request
-    if (connectionRequest.to.toString() !== user.id) {
-        throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
-    }
-    
-    // Check if request is still pending
-    if (connectionRequest.status !== 'pending') {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_NOT_FOUND, HTTP_STATUS.BAD_REQUEST);
-    }
+    // Validate connection action using utility
+    const connectionRequest = await validateConnectionAction(user.id, requestId, 'reject');
     
     // Update the connection status to rejected
     connectionRequest.status = 'rejected';
@@ -137,32 +141,20 @@ export const cancelConnectionRequestController = catchAsync(async (req: CancelCo
     if (!requestId) {
         throw new AppError(MESSAGES.GENERAL.VALIDATION_ERROR, HTTP_STATUS.BAD_REQUEST);
     }
-    const user = req.user;
     
+    const user = req.user;
     if (!user) {
         throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
     
-    const connectionRequest = await Connection.findById(requestId);
-    if (!connectionRequest) {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
-    }
-    
-    // Check if the user is the sender of the request
-    if (connectionRequest.from.toString() !== user.id) {
-        throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
-    }
-    
-    // Check if request is still pending
-    if (connectionRequest.status !== 'pending') {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_NOT_FOUND, HTTP_STATUS.BAD_REQUEST);
-    }
+    // Validate connection cancellation using utility
+    await validateConnectionCancellation(user.id, requestId);
     
     // Delete the connection request
     await Connection.findByIdAndDelete(requestId);
     
     return res.status(HTTP_STATUS.OK).json({
-        message: MESSAGES.CONNECTION.REQUEST_REJECTED,
+        message: MESSAGES.CONNECTION.REQUEST_CANCELLED,
     });
 });
 
@@ -172,32 +164,20 @@ export const removeConnectionController = catchAsync(async (req: RemoveConnectio
     if (!connectionId) {
         throw new AppError(MESSAGES.GENERAL.VALIDATION_ERROR, HTTP_STATUS.BAD_REQUEST);
     }
-    const user = req.user;
     
+    const user = req.user;
     if (!user) {
         throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
     }
     
-    const connection = await Connection.findById(connectionId);
-    if (!connection) {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_NOT_FOUND, HTTP_STATUS.NOT_FOUND);
-    }
-    
-    // Check if the user is part of this connection
-    if (connection.from.toString() !== user.id && connection.to.toString() !== user.id) {
-        throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
-    }
-    
-    // Check if connection is accepted
-    if (connection.status !== 'accepted') {
-        throw new AppError(MESSAGES.CONNECTION.REQUEST_NOT_FOUND, HTTP_STATUS.BAD_REQUEST);
-    }
+    // Validate connection removal using utility
+    await validateConnectionRemoval(user.id, connectionId);
     
     // Delete the connection
     await Connection.findByIdAndDelete(connectionId);
     
     return res.status(HTTP_STATUS.OK).json({
-        message: MESSAGES.GENERAL.SUCCESS,
+        message: MESSAGES.CONNECTION.CONNECTION_REMOVED,
     });
 });
 
@@ -275,62 +255,62 @@ export const getSentRequestsController = catchAsync(async (req: AuthRequest, res
     });
 });
 
-export const getConnectionStatusController = catchAsync(async (req: GetConnectionStatusRequest, res: Response) => {
-    const { userId } = req.params;
+// export const getConnectionStatusController = catchAsync(async (req: GetConnectionStatusRequest, res: Response) => {
+//     const { userId } = req.params;
     
-    if (!userId) {
-        throw new AppError(MESSAGES.GENERAL.VALIDATION_ERROR, HTTP_STATUS.BAD_REQUEST);
-    }
-    const user = req.user;
+//     if (!userId) {
+//         throw new AppError(MESSAGES.GENERAL.VALIDATION_ERROR, HTTP_STATUS.BAD_REQUEST);
+//     }
+//     const user = req.user;
     
-    if (!user) {
-        throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
-    }
+//     if (!user) {
+//         throw new AppError(MESSAGES.AUTH.UNAUTHORIZED, HTTP_STATUS.UNAUTHORIZED);
+//     }
     
-    if (user.id === userId) {
-        return res.status(HTTP_STATUS.OK).json({
-            status: 'self',
-            message: 'This is your own profile'
-        });
-    }
+//     if (user.id === userId) {
+//         return res.status(HTTP_STATUS.OK).json({
+//             status: 'self',
+//             message: 'This is your own profile'
+//         });
+//     }
     
-    // Check if there's any connection between users
-    const connection = await Connection.findOne({
-        $or: [
-            { from: user.id, to: userId },
-            { from: userId, to: user.id }
-        ]
-    });
+//     // Check if there's any connection between users
+//     const connection = await Connection.findOne({
+//         $or: [
+//             { from: user.id, to: userId },
+//             { from: userId, to: user.id }
+//         ]
+//     });
     
-    if (!connection) {
-        return res.status(HTTP_STATUS.OK).json({
-            status: 'none',
-            message: 'No connection exists'
-        });
-    }
+//     if (!connection) {
+//         return res.status(HTTP_STATUS.OK).json({
+//             status: 'none',
+//             message: 'No connection exists'
+//         });
+//     }
     
-    let status = connection.status;
-    let message = '';
+//     let status = connection.status;
+//     let message = '';
     
-    if (connection.status === 'accepted') {
-        status = 'connected';
-        message = 'You are connected with this user';
-    } else if (connection.status === 'pending') {
-        if (connection.from.toString() === user.id) {
-            status = 'sent';
-            message = 'Connection request sent';
-        } else {
-            status = 'received';
-            message = 'Connection request received';
-        }
-    } else if (connection.status === 'rejected') {
-        status = 'rejected';
-        message = 'Connection request was rejected';
-    }
+//     if (connection.status === 'accepted') {
+//         status = 'connected';
+//         message = 'You are connected with this user';
+//     } else if (connection.status === 'pending') {
+//         if (connection.from.toString() === user.id) {
+//             status = 'sent';
+//             message = 'Connection request sent';
+//         } else {
+//             status = 'received';
+//             message = 'Connection request received';
+//         }
+//     } else if (connection.status === 'rejected') {
+//         status = 'rejected';
+//         message = 'Connection request was rejected';
+//     }
     
-    return res.status(HTTP_STATUS.OK).json({
-        status,
-        message,
-        connectionId: connection._id
-    });
-});
+//     return res.status(HTTP_STATUS.OK).json({
+//         status,
+//         message,
+//         connectionId: connection._id
+//     });
+// });
