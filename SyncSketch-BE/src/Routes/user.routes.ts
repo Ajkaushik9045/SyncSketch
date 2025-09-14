@@ -10,7 +10,7 @@ import {
     completeSignupController,
     requestPasswordResetController,
     resetPasswordController
-} from '../Controllers/auth.Controller';
+} from '../Controllers/auth.controller';
 
 
 const authRoutes = Router();

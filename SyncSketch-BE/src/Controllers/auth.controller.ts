@@ -294,13 +294,13 @@ export const requestPasswordResetController = catchAsync(async (
     const { email } = req.body;
 
     if (!email) {
-        throw new AppError("Email is required", HTTP_STATUS.BAD_REQUEST);
+        throw new AppError(MESSAGES.AUTH.EMAIL_REQUIRED, HTTP_STATUS.BAD_REQUEST);
     }
 
     // Send password reset OTP
     const otp = await AuthService.sendPasswordResetOtp(email);
     res.status(HTTP_STATUS.OK).json({
-        message: "Password reset OTP has been sent",
+        message: MESSAGES.AUTH.RESET_OTP_SENT,
     });
     await MailService.sendResetPasswordOtpMail(email, otp);
 });
@@ -309,7 +309,7 @@ export const resetPasswordController = catchAsync(async (req: Request, res: Resp
     const { email, otpCode, newPassword } = req.body;
 
     if (!email || !otpCode || !newPassword) {
-        throw new AppError("Email, OTP code, and new password are required", HTTP_STATUS.BAD_REQUEST);
+        throw new AppError(MESSAGES.AUTH.RESET_FIELDS_REQUIRED, HTTP_STATUS.BAD_REQUEST);
     }
 
     // Verify OTP and update password
