@@ -8,14 +8,12 @@ import {
     getConnectionsController,
     getPendingRequestsController,
     getSentRequestsController,
-    // getConnectionStatusController
 } from "../Controllers/connection.controller";
 import { AuthMiddleware } from "../MiddleWares/authMiddleware";
 import {
     validateSendConnectionRequest,
     validateConnectionRequestId,
     validateConnectionId,
-    validateUserId
 } from "../MiddleWares/validation.middleware";
 
 const ConnectionRoutes = Router();
@@ -31,6 +29,6 @@ ConnectionRoutes.delete("/remove/:connectionId", AuthMiddleware, validateConnect
 ConnectionRoutes.get("/", AuthMiddleware, getConnectionsController);
 ConnectionRoutes.get("/requests", AuthMiddleware, getPendingRequestsController);
 ConnectionRoutes.get("/sent", AuthMiddleware, getSentRequestsController);
-// ConnectionRoutes.get("/status/:userId", AuthMiddleware, validateUserId, getConnectionStatusController);
+
 
 export default ConnectionRoutes;

@@ -32,6 +32,11 @@ export const requestSignupOtpController = catchAsync(async (
 
     // Request OTP
     const otp = await AuthService.requestSignupOtp(email, userName);
+    // Send OTP mail
+    await MailService.sendOtpMail(email, otp).then(() => {
+        console.log("OTP SNt");
+    }).catch((error) => { console.log(error) }
+    );
     res.status(HTTP_STATUS.OK).json({
         message: MESSAGES.AUTH.OTP_SENT,
         data: {
@@ -39,8 +44,6 @@ export const requestSignupOtpController = catchAsync(async (
             userName,
         },
     });
-    // Send OTP mail
-    await MailService.sendOtpMail(email, otp);
 });
 
 // Step 2: Verify OTP and complete signup
@@ -94,7 +97,7 @@ export const completeSignupController = catchAsync(async (
     });
 
     res.status(HTTP_STATUS.CREATED).json({
-        message: "User registered successfully",
+        message: MESSAGES.AUTH.SIGNUP_SUCCESS,
         user: result.user,
         token: result.token,
     });
@@ -118,7 +121,7 @@ export const signinController = catchAsync(async (req: SigninRequest, res: Respo
         throw new AppError(MESSAGES.AUTH.INVALID_CREDENTIALS, HTTP_STATUS.UNAUTHORIZED);
     }
     if (password == undefined) {
-        throw new AppError("Password is not valid", HTTP_STATUS.BAD_REQUEST);
+        throw new AppError(MESSAGES.AUTH.PASSWORD_NOT_VALID, HTTP_STATUS.BAD_REQUEST);
     }
 
     const passwordMatch = await user.validatePassword(password);
@@ -151,7 +154,7 @@ export const signinController = catchAsync(async (req: SigninRequest, res: Respo
     };
 
     return res.status(HTTP_STATUS.OK).json({
-        message: "User data retrieved successfully",
+        message: MESSAGES.AUTH.USER_DATA_FETCHED,
         token,
         user: responseUser,
     });
@@ -166,7 +169,7 @@ export const profileController = catchAsync(async (req: AuthRequest, res: Respon
     const lastLogin = user.lastLogin ?? null;
 
     return res.status(HTTP_STATUS.OK).json({
-        message: "User profile retrieved successfully",
+        message: MESSAGES.AUTH.PROFILE_FETCHED,
         user: {
             id: user._id,
             userName: user.userName,
@@ -203,7 +206,7 @@ export const changePasswordController = catchAsync(async (
     }
     user.passwordHashed = newPassword;
     await user.save();
-    return res.status(HTTP_STATUS.OK).json({ message: "Password updated successfully" });
+    return res.status(HTTP_STATUS.OK).json({ message: MESSAGES.AUTH.PASSWORD_UPDATED });
 });
 
 export const logoutController = catchAsync(async (req: AuthRequest, res: Response) => {
@@ -234,7 +237,7 @@ export const profileEditController = catchAsync(async (
             _id: { $ne: user._id },
         });
         if (existingUserName) {
-            throw new AppError("Username is already taken", HTTP_STATUS.BAD_REQUEST);
+            throw new AppError(MESSAGES.AUTH.USERNAME_EXISTS, HTTP_STATUS.BAD_REQUEST);
         }
     }
 
@@ -244,7 +247,7 @@ export const profileEditController = catchAsync(async (
             _id: { $ne: user._id },
         });
         if (existingEmail) {
-            throw new AppError("Email is already taken", HTTP_STATUS.BAD_REQUEST);
+            throw new AppError(MESSAGES.AUTH.EMAIL_EXISTS, HTTP_STATUS.BAD_REQUEST);
         }
     }
 
@@ -275,7 +278,7 @@ export const profileEditController = catchAsync(async (
     await user.save();
 
     return res.status(HTTP_STATUS.OK).json({
-        message: "Profile updated successfully",
+        message: MESSAGES.AUTH.PROFILE_UPDATED,
         user: {
             id: user._id,
             userName: user.userName,
