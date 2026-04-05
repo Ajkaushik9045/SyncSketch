@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:syncsketch/app/bootstrap/bootstrap.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  final app = await bootstrap();
+  runApp(app);
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp();
-  }
-}

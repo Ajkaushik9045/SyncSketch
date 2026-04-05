@@ -3,6 +3,7 @@ import "package:syncsketch/core/theme/app_colors.dart";
 
 class AppTheme {
   static ThemeData light = _buildTheme(lightColors, Brightness.light);
+  static ThemeData dark = _buildTheme(darkColors, Brightness.dark);
 
   static ThemeData _buildTheme(AppColors colors, Brightness brightness) {
     return ThemeData(
