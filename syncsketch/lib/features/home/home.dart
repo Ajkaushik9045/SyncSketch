@@ -11,9 +11,7 @@ class Home extends StatelessWidget {
     final colors = Theme.of(context).extension<AppColors>()!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
+      appBar: AppBar(title: const Text('Home')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -52,7 +50,9 @@ class Home extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 final current = context.read<ThemeCubit>().state;
-                final newMode = current == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+                final newMode = current == ThemeMode.light
+                    ? ThemeMode.dark
+                    : ThemeMode.light;
                 context.read<ThemeCubit>().changeTheme(newMode);
               },
               child: const Text('Toggle Theme'),
