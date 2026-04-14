@@ -5,7 +5,6 @@ import 'package:syncsketch/core/di/service_locator.dart';
 import 'package:syncsketch/core/theme/cubit/theme_cubit.dart';
 
 Future<Widget> bootstrap() async {
-  await Future.delayed(Duration(minutes: 2));
   await setupDI();
 
   final themeCubit = getIt<ThemeCubit>();
