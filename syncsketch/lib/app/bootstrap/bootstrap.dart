@@ -7,8 +7,7 @@ import 'package:syncsketch/core/theme/cubit/theme_cubit.dart';
 Future<Widget> bootstrap() async {
   await setupDI();
 
-  final themeCubit = getIt<ThemeCubit>();
-  themeCubit.loadTheme();
+  final themeCubit = getIt<ThemeCubit>()..loadTheme();
 
   return BlocProvider(create: (_) => themeCubit, child: const App());
 }
